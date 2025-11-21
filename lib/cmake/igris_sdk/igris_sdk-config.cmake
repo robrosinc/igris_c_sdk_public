@@ -39,10 +39,17 @@ set(IGRIS_SDK_THIRDPARTY_LIB_DIR "${IGRIS_SDK_ROOT}/thirdparty/lib")
 find_library(DDSC_LIB NAMES ddsc libddsc PATHS "${IGRIS_SDK_THIRDPARTY_LIB_DIR}" NO_DEFAULT_PATH)
 find_library(DDSCXX_LIB NAMES ddscxx libddscxx PATHS "${IGRIS_SDK_THIRDPARTY_LIB_DIR}" NO_DEFAULT_PATH)
 
+# Find system libraries required by Cyclone DDS
+find_package(Threads REQUIRED)
+find_package(OpenSSL REQUIRED)
+
 # Create imported targets for thirdparty libraries
 if(NOT TARGET ddsc)
     add_library(ddsc STATIC IMPORTED)
-    set_target_properties(ddsc PROPERTIES IMPORTED_LOCATION "${DDSC_LIB}")
+    set_target_properties(ddsc PROPERTIES
+        IMPORTED_LOCATION "${DDSC_LIB}"
+        INTERFACE_LINK_LIBRARIES "OpenSSL::SSL;OpenSSL::Crypto"
+    )
 endif()
 
 if(NOT TARGET ddscxx)
@@ -52,9 +59,6 @@ endif()
 
 # Include the exported targets
 include("${CMAKE_CURRENT_LIST_DIR}/igris_sdk-targets.cmake")
-
-# Find system libraries required by Cyclone DDS
-find_package(Threads REQUIRED)
 
 # Add thirdparty includes and link dependencies
 if(TARGET igris_sdk::igris_sdk)
