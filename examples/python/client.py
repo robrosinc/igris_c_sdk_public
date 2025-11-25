@@ -81,7 +81,7 @@ if choice == "2":
 if choice == "3":
     call_init_bms(client, igc_sdk.BmsInitType.BMS_AND_MOTOR_INIT, "BMS_AND_MOTOR_INIT")
 if choice == "4":
-    call_init_bms(client, igc_sdk.BmsInitType.BMS_OFF, "BMS_OFF")
+    call_init_bms(client, igc_sdk.BmsInitType.BMS_INIT_NONE, "BMS_OFF")
 if choice == "5":
     call_set_torque(client, igc_sdk.TorqueType.TORQUE_ON, "TORQUE_ON")
 if choice == "6":

@@ -50,6 +50,48 @@ static const std::array<const char *, 31> JOINT_NAMES = {
     "Wrist_Pitch_L", "Shoulder_Pitch_R", "Shoulder_Roll_R", "Shoulder_Yaw_R", "Elbow_Pitch_R", "Wrist_Yaw_R",  "Wrist_Roll_R",
     "Wrist_Pitch_R", "Neck_Yaw",         "Neck_Pitch"};
 
+// Joint position limits (rad) from params.yaml
+static const std::array<float, 31> JOINT_POS_MAX = {
+    1.57f,                                                          // Waist_Yaw
+    0.310f, 0.28f,                                                  // Waist_Roll, Waist_Pitch
+    0.480f, 2.300f, 1.570f, 2.280f, 0.698f, 0.349f,                  // Left leg
+    0.480f, 0.330f, 1.570f, 2.280f, 0.698f, 0.349f,                  // Right leg
+    1.047f, 3.140f, 1.570f, 0.0f, 1.570f, 0.870f, 0.650f,            // Left arm
+    1.047f, 0.170f, 1.570f, 0.0f, 1.570f, 1.221f, 0.650f,            // Right arm
+    1.221f, 0.520f                                                  // Neck
+};
+
+static const std::array<float, 31> JOINT_POS_MIN = {
+    -1.57f,                                                         // Waist_Yaw
+    -0.310f, -0.87f,                                                // Waist_Roll, Waist_Pitch
+    -2.000f, -0.330f, -1.570f, 0.0f, -0.70f, -0.350f,                // Left leg
+    -2.000f, -2.300f, -1.570f, 0.0f, -0.70f, -0.350f,                // Right leg
+    -3.141f, -0.170f, -1.570f, -2.0f, -1.570f, -1.221f, -0.650f,     // Left arm
+    -3.141f, -3.140f, -1.570f, -2.0f, -1.570f, -0.870f, -0.650f,     // Right arm
+    -1.221f, -0.520f                                                // Neck
+};
+
+// Motor position limits (rad) from params.yaml
+static const std::array<float, 31> MOTOR_POS_MAX = {
+    1.57f,                                                          // Waist_Yaw
+    0.87f, 0.87f,                                                   // Waist_L, Waist_R
+    0.480f, 2.300f, 1.570f, 2.280f, 0.609f, 0.523f,                  // Left leg
+    0.480f, 0.330f, 1.570f, 2.280f, 0.609f, 0.523f,                  // Right leg
+    1.047f, 3.140f, 1.570f, 0.0f, 1.570f, 0.75f, 0.75f,              // Left arm
+    1.047f, 0.170f, 1.570f, 0.0f, 1.570f, 0.98f, 0.98f,              // Right arm
+    1.221f, 0.520f                                                  // Neck
+};
+
+static const std::array<float, 31> MOTOR_POS_MIN = {
+    -1.57f,                                                         // Waist_Yaw
+    -0.34f, -0.34f,                                                 // Waist_L, Waist_R
+    -2.000f, -0.330f, -1.570f, 0.0f, -0.630f, -0.617f,               // Left leg
+    -2.000f, -2.300f, -1.570f, 0.0f, -0.630f, -0.617f,               // Right leg
+    -3.141f, -0.170f, -1.570f, -2.0f, -1.570f, -0.98f, -0.98f,       // Left arm
+    -3.141f, -3.140f, -1.570f, -2.0f, -1.570f, -0.75f, -0.75f,       // Right arm
+    -1.221f, -0.520f                                                // Neck
+};
+
 // Global state
 static std::atomic<bool> g_running(true);
 static std::atomic<uint32_t> g_lowstate_received_count(0);
@@ -213,18 +255,18 @@ void LowCmdPublishThread(Publisher<LowCmd> *publisher) {
     // Example default PD gains - adjust these values based on your robot configuration
     static const std::array<float, 31> default_kp = {
         50.0,  25.0,  25.0,                             // Waist
-        100.0, 100.0, 50.0, 100.0, 25.0,  300.0,        // Left leg
+        500.0, 200.0, 50.0, 500.0, 300.0,  300.0,        // Left leg
         500.0, 200.0, 50.0, 500.0, 300.0, 300.0,        // Right leg
-        50.0,  50.0,  30.0, 30.0,  25.0,  10.0,  10.0,  // Left arm
-        50.0,  50.0,  30.0, 30.0,  25.0,  10.0,  10.0,  // Right arm
+        50.0,  50.0,  30.0, 30.0,  5.0,  5.0,  5.0,  // Left arm
+        50.0,  50.0,  30.0, 30.0,  5.0,  5.0,  5.0,  // Right arm
         2.0,   5.0                                      // Neck
     };
     static const std::array<float, 31> default_kd = {
         0.8,  0.8, 0.8,                        // Waist
         3.0,  0.5, 0.5,  3.0,  1.5, 1.5,       // Left leg
         3.0,  0.5, 0.5,  3.0,  1.5, 1.5,       // Right leg
-        0.5,  0.5, 0.15, 0.15, 1.3, 0.7, 0.7,  // Left arm
-        0.5,  0.5, 0.15, 0.15, 1.3, 0.7, 0.7,  // Right arm
+        0.5,  0.5, 0.15, 0.15, 0.1, 0.1, 0.1,  // Left arm
+        0.5,  0.5, 0.15, 0.15, 0.1, 0.1, 0.1,  // Right arm
         0.05, 0.1                              // Neck
     };
 
@@ -464,9 +506,9 @@ int main(int argc, char **argv) {
                     // LOW_LEVEL mode: Show editable target positions
                     std::lock_guard<std::mutex> lock_target(g_target_mutex);
                     if (g_show_motor == 1) {
-                        ImGui::SliderFloat(label, &g_target_motor_pos[i], -3.14f, 3.14f, "%.3f rad");
+                        ImGui::SliderFloat(label, &g_target_motor_pos[i], MOTOR_POS_MIN[i], MOTOR_POS_MAX[i], "%.3f rad", ImGuiSliderFlags_AlwaysClamp);
                     } else {
-                        ImGui::SliderFloat(label, &g_target_joint_pos[i], -3.14f, 3.14f, "%.3f rad");
+                        ImGui::SliderFloat(label, &g_target_joint_pos[i], JOINT_POS_MIN[i], JOINT_POS_MAX[i], "%.3f rad", ImGuiSliderFlags_AlwaysClamp);
                     }
                 } else {
                     // Display mode: Show current state (read-only)
@@ -478,7 +520,10 @@ int main(int argc, char **argv) {
                             g_slider_values[i] = g_latest_lowstate.joint_state()[i].q();
                         }
                     }
-                    ImGui::SliderFloat(label, &g_slider_values[i], -3.14f, 3.14f, "%.3f rad");
+                    // Use appropriate limits based on current mode
+                    float pos_min = (g_show_motor == 1) ? MOTOR_POS_MIN[i] : JOINT_POS_MIN[i];
+                    float pos_max = (g_show_motor == 1) ? MOTOR_POS_MAX[i] : JOINT_POS_MAX[i];
+                    ImGui::SliderFloat(label, &g_slider_values[i], pos_min, pos_max, "%.3f rad");
                 }
             }
             ImGui::EndChild();

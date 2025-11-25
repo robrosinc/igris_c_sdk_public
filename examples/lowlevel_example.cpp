@@ -107,18 +107,18 @@ int main(int argc, char **argv) {
     // Example PD gains (adjust for your robot)
     static const std::array<float, NUM_MOTORS> kp = {
         50.0,  25.0,  25.0,                             // Waist
-        100.0, 100.0, 50.0, 100.0, 25.0,  300.0,        // Left leg
+        500.0, 200.0, 50.0, 500.0, 300.0,  300.0,        // Left leg
         500.0, 200.0, 50.0, 500.0, 300.0, 300.0,        // Right leg
-        50.0,  50.0,  30.0, 30.0,  25.0,  10.0,  10.0,  // Left arm
-        50.0,  50.0,  30.0, 30.0,  25.0,  10.0,  10.0,  // Right arm
+        50.0,  50.0,  30.0, 30.0,  5.0,  5.0,  5.0,  // Left arm
+        50.0,  50.0,  30.0, 30.0,  5.0,  5.0,  5.0,  // Right arm
         2.0,   5.0                                      // Neck
     };
     static const std::array<float, NUM_MOTORS> kd = {
         0.8,  0.8, 0.8,                        // Waist
         3.0,  0.5, 0.5,  3.0,  1.5, 1.5,       // Left leg
         3.0,  0.5, 0.5,  3.0,  1.5, 1.5,       // Right leg
-        0.5,  0.5, 0.15, 0.15, 1.3, 0.7, 0.7,  // Left arm
-        0.5,  0.5, 0.15, 0.15, 1.3, 0.7, 0.7,  // Right arm
+        0.5,  0.5, 0.15, 0.15, 0.1, 0.1, 0.1,  // Left arm
+        0.5,  0.5, 0.15, 0.15, 0.1, 0.1, 0.1,  // Right arm
         0.05, 0.1                              // Neck
     };
 
