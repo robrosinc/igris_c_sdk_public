@@ -72,24 +72,12 @@ class IgrisC_Client {
      */
     igris_c::msg::dds::ServiceResponse SetControlMode(igris_c::msg::dds::ControlMode mode, int timeout_ms = 5000);
 
-    // ========== Service API (Asynchronous) ==========
-
-    /**
-     * @brief Initialize BMS/Motor (non-blocking, returns future)
-     */
+  private:
+    // ========== Internal Async Implementation ==========
     std::future<igris_c::msg::dds::ServiceResponse> InitBmsAsync(igris_c::msg::dds::BmsInitType init_type);
-
-    /**
-     * @brief Set torque on/off (non-blocking, returns future)
-     */
     std::future<igris_c::msg::dds::ServiceResponse> SetTorqueAsync(igris_c::msg::dds::TorqueType torque);
-
-    /**
-     * @brief Set control mode (non-blocking, returns future)
-     */
     std::future<igris_c::msg::dds::ServiceResponse> SetControlModeAsync(igris_c::msg::dds::ControlMode mode);
 
-  private:
     bool initialized_;
     float timeout_;
 
