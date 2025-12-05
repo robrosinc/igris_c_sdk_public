@@ -40,3 +40,6 @@ CTestTestfile.cmake
 
 # Dependency directories (if fetched during build)
 _deps/
+# pixi environments
+.pixi/*
+!.pixi/config.toml
