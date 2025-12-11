@@ -18,10 +18,20 @@ template <typename MessageType> class Subscriber {
 
     // Initialize DDS subscriber with callback (Cyclone DDS)
     // Note: ChannelFactory must be initialized before calling this
+    // Automatically starts listening after initialization
     bool init(CallbackType callback);
+
+    // Stop listening (can be restarted with start())
+    void stop();
+
+    // Start listening (called automatically by init())
+    bool start();
 
     // Check if subscriber is initialized
     bool is_initialized() const { return initialized_; }
+
+    // Check if subscriber is running
+    bool is_running() const { return running_; }
 
   private:
     void listenerThread();

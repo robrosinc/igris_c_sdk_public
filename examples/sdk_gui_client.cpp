@@ -112,10 +112,8 @@ static std::array<float, 31> g_slider_values = {};
 
 // LOW_LEVEL control state
 static std::atomic<bool> g_lowlevel_active(false);
-static std::array<float, 31> g_target_joint_pos  = {};  // Target joint positions (from slider)
-static std::array<float, 31> g_target_motor_pos  = {};  // Target motor positions (from slider)
-static std::array<float, 31> g_cmd_joint_pos     = {};  // Command joint positions (interpolated)
-static std::array<float, 31> g_cmd_motor_pos     = {};  // Command motor positions (interpolated)
+static std::array<float, 31> g_target_joint_pos  = {};  // Target joint positions for LOW_LEVEL mode
+static std::array<float, 31> g_target_motor_pos  = {};  // Target motor positions for LOW_LEVEL mode
 static std::array<float, 31> g_current_joint_pos = {};  // Current actual joint positions
 static std::array<float, 31> g_current_motor_pos = {};  // Current actual motor positions
 static std::mutex g_target_mutex;
@@ -230,18 +228,17 @@ void CallSetControlModeAsync(IgrisC_Client *client, ControlMode mode, const char
 
         // Activate LOW_LEVEL publishing if mode is LOW_LEVEL
         if (res.success() && mode == ControlMode::CONTROL_MODE_LOW_LEVEL) {
-            // Initialize target and command positions to current positions
+            // Initialize target positions to current positions
             {
+                std::lock_guard<std::mutex> lock_state(g_lowstate_mutex);
                 std::lock_guard<std::mutex> lock_target(g_target_mutex);
                 for (int i = 0; i < 31; i++) {
-                    g_target_joint_pos[i] = g_current_joint_pos[i];
-                    g_target_motor_pos[i] = g_current_motor_pos[i];
-                    g_cmd_joint_pos[i] = g_current_joint_pos[i];
-                    g_cmd_motor_pos[i] = g_current_motor_pos[i];
+                    g_target_joint_pos[i] = g_latest_lowstate.joint_state()[i].q();
+                    g_target_motor_pos[i] = g_latest_lowstate.motor_state()[i].q();
                 }
             }
             g_lowlevel_active = true;
-            AddLog("LOW_LEVEL mode activated - synchronized to current positions");
+            AddLog("LOW_LEVEL mode activated - initialized to current positions");
         } else if (mode != ControlMode::CONTROL_MODE_LOW_LEVEL) {
             g_lowlevel_active = false;
             AddLog("LOW_LEVEL mode deactivated");
@@ -287,31 +284,24 @@ void LowCmdPublishThread(Publisher<LowCmd> *publisher) {
                 // Set kinematic mode at LowCmd level (전체 적용)
                 cmd.kinematic_mode(use_joint_mode ? KinematicMode::PJS : KinematicMode::MS);
 
-                // 비율 기반 보간: 매 사이클 남은 거리의 일정 비율만큼 이동
-                // alpha = 0.01 at 300Hz -> 약 1.5초에 95% 도달
-                // 작은 변화는 빠르게 반응
-                const float alpha = 0.01f;
-                const float min_delta = 0.0001f;  // 목표 도달 판정용 최소 변화량
-
                 for (int i = 0; i < 31; i++) {
                     auto &motor_cmd = cmd.motors()[i];
 
                     // Set motor ID
                     motor_cmd.id(i);
 
-                    float &q_cmd_ref = use_joint_mode ? g_cmd_joint_pos[i] : g_cmd_motor_pos[i];
-                    float q_target = use_joint_mode ? g_target_joint_pos[i] : g_target_motor_pos[i];
+                    float q_target;
 
-                    // Apply exponential smoothing (비율 기반 보간)
-                    float delta = q_target - q_cmd_ref;
-                    if (std::abs(delta) > min_delta) {
-                        q_cmd_ref += delta * alpha;
+                    if (use_joint_mode) {
+                        // Joint Space (PJS) mode
+                        q_target = g_target_joint_pos[i];
                     } else {
-                        q_cmd_ref = q_target;  // 목표 도달
+                        // Motor Space (MS) mode
+                        q_target = g_target_motor_pos[i];
                     }
 
                     // Set commands
-                    motor_cmd.q(q_cmd_ref);
+                    motor_cmd.q(q_target);
                     motor_cmd.dq(0.0f);
                     motor_cmd.tau(0.0f);
                     motor_cmd.kp(default_kp[i]);
@@ -452,54 +442,37 @@ int main(int argc, char **argv) {
             ImGui::SameLine();
             ImGui::RadioButton("Joint State", &g_show_motor, 0);
 
-            // Detect mode change and update target/cmd positions to current state
+            // Detect mode change and update target positions to current state
             if (g_show_motor != g_prev_show_motor && g_lowlevel_active) {
                 std::lock_guard<std::mutex> lock_target(g_target_mutex);
                 if (g_show_motor == 1) {
-                    // Switched to Motor mode: set motor targets and cmd to current motor positions
+                    // Switched to Motor mode: set motor targets to current motor positions
                     for (int i = 0; i < 31; i++) {
                         g_target_motor_pos[i] = g_current_motor_pos[i];
-                        g_cmd_motor_pos[i] = g_current_motor_pos[i];
                     }
-                    AddLog("Switched to Motor mode - synchronized to current motor positions");
+                    AddLog("Switched to Motor mode - targets set to current motor positions");
                 } else {
-                    // Switched to Joint mode: set joint targets and cmd to current joint positions
+                    // Switched to Joint mode: set joint targets to current joint positions
                     for (int i = 0; i < 31; i++) {
                         g_target_joint_pos[i] = g_current_joint_pos[i];
-                        g_cmd_joint_pos[i] = g_current_joint_pos[i];
                     }
-                    AddLog("Switched to Joint mode - synchronized to current joint positions");
+                    AddLog("Switched to Joint mode - targets set to current joint positions");
                 }
                 g_prev_show_motor = g_show_motor;
             }
             ImGui::Separator();
 
-            // Reset and Sync buttons
-            if (ImGui::Button("Reset to Zero", ImVec2(300, 30))) {
+            // Reset button (always visible but only works in LOW_LEVEL mode)
+            if (ImGui::Button("Reset to Initial", ImVec2(-1, 30))) {
                 if (g_lowlevel_active && g_first_state_received) {
                     std::lock_guard<std::mutex> lock_target(g_target_mutex);
                     for (int i = 0; i < 31; i++) {
-                        g_target_motor_pos[i] = 0.0f;
-                        g_target_joint_pos[i] = 0.0f;
+                        g_target_motor_pos[i] = g_initial_motor_pos[i];
+                        g_target_joint_pos[i] = g_initial_joint_pos[i];
                     }
-                    AddLog("Target positions reset to zero");
+                    AddLog("Target positions reset to initial values");
                 } else if (!g_lowlevel_active) {
                     AddLog("Enable LOW_LEVEL mode first to use Reset");
-                } else {
-                    AddLog("Waiting for initial state to be received");
-                }
-            }
-            ImGui::SameLine();
-            if (ImGui::Button("Set Current Position", ImVec2(-1, 30))) {
-                if (g_first_state_received) {
-                    std::lock_guard<std::mutex> lock_target(g_target_mutex);
-                    for (int i = 0; i < 31; i++) {
-                        g_target_motor_pos[i] = g_current_motor_pos[i];
-                        g_target_joint_pos[i] = g_current_joint_pos[i];
-                        g_cmd_motor_pos[i] = g_current_motor_pos[i];
-                        g_cmd_joint_pos[i] = g_current_joint_pos[i];
-                    }
-                    AddLog("Synchronized to current positions");
                 } else {
                     AddLog("Waiting for initial state to be received");
                 }
