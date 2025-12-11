@@ -101,6 +101,13 @@ static LowState g_latest_lowstate;
 static std::mutex g_lowstate_mutex;
 static bool g_first_state_received = false;
 
+// ControlModeState subscription
+static ControlModeState g_latest_controlmodestate;
+static std::mutex g_controlmodestate_mutex;
+static std::atomic<bool> g_controlmodestate_subscribed(false);
+static std::atomic<uint32_t> g_controlmodestate_received_count(0);
+static std::unique_ptr<Subscriber<ControlModeState>> g_controlmodestate_sub;
+
 // Initial reference values (set on first state receive)
 static std::array<float, 31> g_initial_motor_pos = {};
 static std::array<float, 31> g_initial_joint_pos = {};
@@ -141,6 +148,25 @@ void AddLog(const std::string &msg) {
     g_response_log.push_back(std::string("[") + time_str + "] " + msg);
     if (g_response_log.size() > MAX_LOG_LINES) {
         g_response_log.pop_front();
+    }
+}
+
+// ControlModeState callback
+void ControlModeStateCallback(const ControlModeState &state) {
+    std::lock_guard<std::mutex> lock(g_controlmodestate_mutex);
+    g_latest_controlmodestate = state;
+    g_controlmodestate_received_count++;
+}
+
+// Helper to convert ControlMode to string
+const char *ControlModeToString(ControlMode mode) {
+    switch (mode) {
+        case ControlMode::CONTROL_MODE_LOW_LEVEL:
+            return "LOW_LEVEL";
+        case ControlMode::CONTROL_MODE_HIGH_LEVEL:
+            return "HIGH_LEVEL";
+        default:
+            return "UNKNOWN";
     }
 }
 
@@ -644,6 +670,41 @@ int main(int argc, char **argv) {
 
             if (ImGui::Button("8. Control Mode: HIGH_LEVEL", ImVec2(-1, 40))) {
                 CallSetControlModeAsync(&client, ControlMode::CONTROL_MODE_HIGH_LEVEL, "HIGH_LEVEL");
+            }
+
+            ImGui::Separator();
+
+            // ControlModeState subscription button
+            if (!g_controlmodestate_subscribed) {
+                if (ImGui::Button("9. Subscribe ControlModeState", ImVec2(-1, 40))) {
+                    g_controlmodestate_sub = std::make_unique<Subscriber<ControlModeState>>("rt/controlmodestate");
+                    if (g_controlmodestate_sub->init(ControlModeStateCallback)) {
+                        g_controlmodestate_subscribed = true;
+                        AddLog("ControlModeState subscription started");
+                    } else {
+                        AddLog("Failed to subscribe to ControlModeState");
+                        g_controlmodestate_sub.reset();
+                    }
+                }
+            } else {
+                if (ImGui::Button("9. Unsubscribe ControlModeState", ImVec2(-1, 40))) {
+                    g_controlmodestate_sub.reset();
+                    g_controlmodestate_subscribed = false;
+                    g_controlmodestate_received_count = 0;
+                    AddLog("ControlModeState subscription stopped");
+                }
+            }
+
+            // Display ControlModeState if subscribed
+            if (g_controlmodestate_subscribed) {
+                ImGui::Separator();
+                ImGui::TextColored(ImVec4(0.5f, 1.0f, 0.5f, 1.0f), "ControlModeState:");
+                ImGui::Text("  Received: %u msgs", g_controlmodestate_received_count.load());
+                {
+                    std::lock_guard<std::mutex> lock(g_controlmodestate_mutex);
+                    ImGui::Text("  Tick: %u", g_latest_controlmodestate.tick());
+                    ImGui::Text("  Mode: %s", ControlModeToString(g_latest_controlmodestate.mode()));
+                }
             }
 
             ImGui::Separator();
