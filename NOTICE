@@ -1,0 +1,22 @@
+IGRIS SDK
+Copyright (c) 2025 IGRIS Robotics
+
+This product includes software developed by third parties:
+
+1. Fast DDS (https://github.com/eProsima/Fast-DDS)
+   Copyright (c) 2016-2024 eProsima
+   Licensed under Apache License 2.0
+   See LICENSES/Apache-2.0-FastDDS.txt
+
+2. Fast CDR (https://github.com/eProsima/Fast-CDR)
+   Copyright (c) 2016-2024 eProsima
+   Licensed under Apache License 2.0
+   See LICENSES/Apache-2.0-FastCDR.txt
+
+3. foonathan_memory (https://github.com/foonathan/memory)
+   Copyright (c) 2015-2024 Jonathan Müller
+   Licensed under zlib License
+   See LICENSES/Zlib-foonathan_memory.txt
+
+All third-party software is statically linked into libigris_sdk.so.
+Headers are provided for compilation purposes only.

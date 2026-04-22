@@ -1,0 +1,45 @@
+# Python virtual environment
+venv/
+.venv/
+env/
+.env/
+
+# Build directories
+build/
+cmake-build-*/
+out/
+
+# CMake generated files
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.cmake
+!**/CMakeLists.txt
+!lib/cmake/**
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Debug files
+*.dSYM/
+*.pdb
+
+# Package files
+*.tar.gz
+*.zip
+
+# Test output
+Testing/
+CTestTestfile.cmake
+
+# Dependency directories (if fetched during build)
+_deps/
+# pixi environments
+.pixi/*
+!.pixi/config.toml
