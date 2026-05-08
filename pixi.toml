@@ -1,0 +1,34 @@
+[workspace]
+name = "igris_c_sdk_public"
+description = "User-side environment for the IGRIS-C SDK public release"
+authors = ["robros <sw@robros.co.kr>"]
+channels = ["conda-forge"]
+platforms = ["linux-64"]
+version = "0.1.0"
+
+[dependencies]
+python = "3.12.*"
+pip = ">=25.3,<26"
+# numpy + opencv are required by sensor_viewer.py.
+numpy = ">=1.26,<3"
+opencv = ">=4.10,<5"
+
+# dearpygui is not on conda-forge; install from PyPI.
+[pypi-dependencies]
+dearpygui = ">=2.0,<3"
+
+# Keep the env isolated from ROS / system PYTHONPATH so `import igris_c_sdk`
+# resolves against the wheel installed under .pixi/envs/default, not whatever
+# overlays the parent shell happens to have sourced.
+[activation.env]
+PYTHONPATH = ""
+
+[tasks]
+# Convenience helpers for end users.
+install-wheel = "pip install --force-reinstall dist/*.whl"
+example-build = { cmd = "./build.sh", cwd = "examples" }
+# Python examples — assume `install-wheel` has been run once.
+run-client = { cmd = "python python/client.py", cwd = "examples" }
+run-sensor-viewer = { cmd = "python python/sensor_viewer.py", cwd = "examples" }
+run-metaquest = { cmd = "python python/metaquest.py", cwd = "examples" }
+run-gui = { cmd = "python python/sdk_gui_client.py", cwd = "examples" }
