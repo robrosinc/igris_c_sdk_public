@@ -33,6 +33,7 @@
 #  define IDL_DEPRECATED_NO_EXPORT IDL_NO_EXPORT IDL_DEPRECATED
 #endif
 
+/* NOLINTNEXTLINE(readability-avoid-unconditional-preprocessor-if) */
 #if 0 /* DEFINE_NO_DEPRECATED */
 #  ifndef IDL_NO_DEPRECATED
 #    define IDL_NO_DEPRECATED
