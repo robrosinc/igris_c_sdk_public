@@ -1,0 +1,29 @@
+IGRIS SDK
+=========
+
+This product includes software developed by ROBROS and third parties.
+
+Third-Party Software
+--------------------
+
+1. Eclipse Cyclone DDS (https://github.com/eclipse-cyclonedds/cyclonedds)
+   Licensed under Eclipse Public License 2.0 and Eclipse Distribution License 1.0
+   See licenses/eclipse-cyclonedds/cyclonedds/LICENSE
+
+2. Eclipse Cyclone DDS C++ (https://github.com/eclipse-cyclonedds/cyclonedds-cxx)
+   Licensed under Eclipse Public License 2.0 and Eclipse Distribution License 1.0
+   See licenses/eclipse-cyclonedds/cyclonedds-cxx/LICENSE
+
+All third-party software is statically linked into libigris_c_sdk.a.
+Headers and libraries are provided in the thirdparty/ directory for compilation purposes.
+
+Deployment Notice
+-----------------
+
+When distributing software that uses IGRIS SDK:
+1. Include this NOTICE file
+2. Include the LICENSE file
+3. Include the licenses/ directory with all third-party licenses
+4. Maintain copyright notices in all distributed files
+
+For more information about third-party licenses, see the licenses/ directory.
