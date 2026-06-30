@@ -1,0 +1,14 @@
+uint8 BMS_INIT_NONE=0
+uint8 BMS_INIT=1
+uint8 MOTOR_INIT=2
+uint8 BMS_AND_MOTOR_INIT=3
+uint8 BMS_OFF=4
+Header header
+string request_id
+uint8 init
+---
+Header header
+string request_id
+bool success
+string message
+int32 error_code
