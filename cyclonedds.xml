@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  IGRIS-C SDK - CycloneDDS configuration (example)
+
+  Before running any SDK example, point CYCLONEDDS_URI at this file:
+      export CYCLONEDDS_URI=file://$(pwd)/cyclonedds.xml
+
+  IMPORTANT: set the NetworkInterface "name" below to the interface on THIS
+  machine that reaches the robot (e.g. eth0, enp3s0, wlan0, wlo1).
+    - list interfaces with:  ip link   (or  ifconfig )
+    - or set autodetermine="true" to let CycloneDDS pick the interface itself.
+
+  The domain id and robot namespace are NOT set here - pass them to the example
+  / ChannelFactory::Init(domain_id, namespace) instead (see manual b.3).
+-->
+<CycloneDDS>
+    <Domain>
+        <General>
+            <Interfaces>
+                <!-- CHANGE "eth0" to your machine's network interface -->
+                <NetworkInterface name="eth0" autodetermine="false" />
+            </Interfaces>
+        </General>
+    </Domain>
+</CycloneDDS>
