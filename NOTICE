@@ -1,0 +1,20 @@
+IGRIS-C SDK
+Copyright (c) 2025 ROBROS Inc.
+
+This product is licensed under the BSD 3-Clause License — see LICENSE.
+
+Bundled third-party components (statically linked into libigris_c_sdk.a):
+
+1. Eclipse Cyclone DDS (https://github.com/eclipse-cyclonedds/cyclonedds)
+   Copyright (c) 2018-present, Eclipse Foundation, Inc.
+   Licensed under the Eclipse Public License v2.0 OR
+   Eclipse Distribution License v1.0 (BSD-style).
+   See licenses/eclipse-cyclonedds/cyclonedds/LICENSE.
+
+2. Eclipse Cyclone DDS C++ (https://github.com/eclipse-cyclonedds/cyclonedds-cxx)
+   Copyright (c) 2020-present, Eclipse Foundation, Inc.
+   Licensed under EPL-2.0 OR EDL-1.0.
+   See licenses/eclipse-cyclonedds/cyclonedds-cxx/LICENSE.
+
+Header files for the bundled libraries are exposed under thirdparty/include/
+for compilation purposes only — they are not separately distributable.
