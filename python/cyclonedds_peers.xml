@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<CycloneDDS>
+    <Domain>
+        <General>
+            <Interfaces>
+                <NetworkInterface name="eth0" autodetermine="false" />
+            </Interfaces>
+            <AllowMulticast>false</AllowMulticast>
+        </General>
+        <Discovery>
+            <Peers>
+                <!-- CHANGE to the robot's IP address. -->
+                <Peer address="192.168.0.100"/>
+            </Peers>
+            <ParticipantIndex>auto</ParticipantIndex>
+            <MaxAutoParticipantIndex>60</MaxAutoParticipantIndex>
+        </Discovery>
+        <Internal>
+            <SocketReceiveBufferSize max="64MiB"/>
+            <SocketSendBufferSize max="64MiB"/>
+        </Internal>
+    </Domain>
+</CycloneDDS>

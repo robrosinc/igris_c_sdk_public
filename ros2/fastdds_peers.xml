@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  IGRIS-C SDK - Fast DDS discovery configuration (example)
+
+  Needed on the CLIENT machine only when discovery multicast does not reach the
+  robot. The usual case is a robot on Wi-Fi and a client on wired Ethernet: the
+  access point does not forward the 239.255.0.1 discovery group between the two
+  segments, in either direction, so neither side ever announces itself to the
+  other. Same subnet and a working ping do NOT imply working multicast.
+
+  Symptom: `ros2 topic list` shows nothing from the robot, or shows only a few
+  topics while the robot itself lists them all.
+
+  Two things are required, and NEITHER alone is enough:
+
+    1. initialPeersList - the robot's address, so discovery can go out unicast
+       instead of relying on the multicast that is being dropped.
+    2. maxInitialPeersRange - Fast DDS probes only participant ids 0-3 by
+       default. A robot runs more processes than that, so unicast discovery
+       without this finds whichever handful of participants happen to hold the
+       low ids, and which ones those are changes on every restart. Raising it
+       to 32 covers every participant the robot starts.
+
+  Note there is no <port> in the locator. Fast DDS derives the well-known
+  discovery port from ROS_DOMAIN_ID at run time, so this file works unchanged
+  on any domain. The ONLY environment-specific value is the address below.
+
+  Usage (both variables are required):
+
+      export FASTRTPS_DEFAULT_PROFILES_FILE=$PWD/fastdds_peers.xml
+      export ROS_DOMAIN_ID=<robot's igris_c.network.domain_id>
+      ros2 daemon stop        # see below
+      ros2 topic list
+
+  `ros2 daemon stop` is not optional. A daemon already running without this
+  profile has cached its discovery results, and CLI commands ask that daemon -
+  so the profile appears to do nothing until the daemon is restarted.
+
+  The variable name is FASTRTPS_, not FASTDDS_: Fast DDS was formerly Fast RTPS
+  and kept the old name for this variable. FASTDDS_DEFAULT_PROFILES_FILE is not
+  read at all.
+
+  This replaces ROS_STATIC_PEERS, which sets the address but cannot raise the
+  participant-id range; unset it when using this file.
+-->
+<dds xmlns="http://www.eprosima.com/XMLSchemas/fastRTPS_Profiles">
+  <profiles>
+    <transport_descriptors>
+      <transport_descriptor>
+        <transport_id>udp_wide_peers</transport_id>
+        <type>UDPv4</type>
+        <!-- Participant ids probed per peer address. Default is 4 (ids 0-3). -->
+        <maxInitialPeersRange>32</maxInitialPeersRange>
+      </transport_descriptor>
+    </transport_descriptors>
+    <participant profile_name="igris_c_wide_peers" is_default_profile="true">
+      <rtps>
+        <userTransports>
+          <transport_id>udp_wide_peers</transport_id>
+        </userTransports>
+        <!-- The custom descriptor above replaces the builtin UDP transport; leaving the
+             builtin one enabled would keep a second UDPv4 transport at the default range. -->
+        <useBuiltinTransports>false</useBuiltinTransports>
+        <builtin>
+          <initialPeersList>
+            <locator>
+              <udpv4>
+                <!-- CHANGE this to the robot's IP address. -->
+                <address>192.168.0.100</address>
+              </udpv4>
+            </locator>
+          </initialPeersList>
+        </builtin>
+      </rtps>
+    </participant>
+  </profiles>
+</dds>

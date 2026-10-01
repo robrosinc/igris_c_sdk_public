@@ -1,0 +1,15 @@
+# RENAMED from BmsInitCmd; BMS_* -> PDU_*. IDL enum -> uint8 + constants.
+uint8 PDU_INIT_NONE=0
+uint8 PDU_INIT=1
+uint8 MOTOR_INIT=2
+uint8 PDU_AND_MOTOR_INIT=3
+uint8 PDU_OFF=4
+std_msgs/Header header
+string request_id
+uint8 init
+---
+std_msgs/Header header
+string request_id
+bool success
+string message
+int32 error_code

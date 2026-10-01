@@ -1,0 +1,50 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.venv/
+venv/
+env/
+
+# Pixi
+.pixi/*
+!.pixi/config.toml
+
+# Build outputs from examples
+build/
+cmake-build-*/
+out/
+_deps/
+
+# CMake intermediates
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.cmake
+!**/CMakeLists.txt
+# Match lib/cmake/ at any depth: the SDK config lands at
+# <deliverable>/cyclonedds/lib/cmake/igris_c_sdk/, so a root-anchored
+# "lib/cmake/**" would not rescue it from the "*.cmake" rule above.
+!**/lib/cmake/**
+
+# IDE / editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Debug
+*.dSYM/
+*.pdb
+
+# Archives
+*.tar.gz
+*.zip
+
+# Test output
+Testing/
+CTestTestfile.cmake

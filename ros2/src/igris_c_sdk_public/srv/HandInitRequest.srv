@@ -1,0 +1,8 @@
+std_msgs/Header header
+string request_id
+---
+std_msgs/Header header
+string request_id
+bool success
+string message
+int32 error_code
